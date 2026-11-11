@@ -98,6 +98,10 @@ class LLMClient:
             json_mode=True,
         )
 
+        # content might be a string or already parsed dict depending on provider
+        if isinstance(content, dict):
+            return content
+
         try:
             return json.loads(content)
         except json.JSONDecodeError as e:

@@ -17,9 +17,9 @@ class Settings(BaseSettings):
 
     # Groq LLM configuration
     groq_api_key: str = Field(default="")
-    groq_model: str = Field(default="llama-3.3-70b-versatile")
+    groq_model: str = Field(default="qwen/qwen3.8-27b")
     groq_temperature: float = Field(default=0.7)
-    groq_max_tokens: int = Field(default=4096)
+    groq_max_tokens: int = Field(default=8192)
 
     # App settings
     app_name: str = Field(default="History Predictor")

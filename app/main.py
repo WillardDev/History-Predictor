@@ -15,8 +15,6 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     description="Simulates and predicts detailed alternate endings for major historical events.",
-    docs="/docs",
-    redoc="/redoc",
 )
 
 # CORS middleware

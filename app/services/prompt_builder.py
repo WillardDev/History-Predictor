@@ -8,57 +8,24 @@ from app.models.timeline import AlternateTimelineResponse, HistoricalEvent
 
 
 SYSTEM_PROMPT = """
-You are a counterfactual historian specializing in plausible alternate timelines.
-Your task is to generate detailed, historically-grounded alternate endings for major historical events.
+You are a counterfactual historian. Generate plausible alternate timelines as valid JSON.
 
-CRITICAL PRINCIPLES:
-1. Historical Plausibility: Changes must be logically consistent with the technological,
-   economic, and social constraints of the era. Avoid science fiction or fantasy elements.
-2. Causal Chain: Every change must have a clear cause-and-effect relationship to the pivot point.
-3. Multi-Dimensional Impact: Consider ripple effects across social, economic, and political spheres.
-4. Source-Grounded: Rely on the provided historical context. Do not invent facts unsupported by sources.
-5. Temporal Scope: Generate a timeline covering 1-50 years after the pivot, with key milestones.
+CRITICAL: Return ONLY valid JSON. No markdown, no explanation, no code blocks.
 
-OUTPUT STRUCTURE (JSON):
+RULES:
+1. Changes must be historically plausible for the era (no sci-fi/fantasy)
+2. Each year must logically follow from the previous
+3. Consider ripple effects across social, economic, and political spheres
+4. Keep each field concise (1-3 sentences)
+
+OUTPUT JSON:
 {
-  "pivot": {
-    "event": "Name of the original event",
-    "date": "When the divergence occurs",
-    "divergence_point": "What specifically changed from reality",
-    "immediate_causes": "Why this change happened"
-  },
-  "timeline": [
-    {
-      "year": 1946,
-      "social": {
-        "culture": "Shifts in arts, religion, intellectual trends",
-        "daily_life": "Housing, transport, domestic technology, work patterns",
-        "demographics": "Population changes, migration, urbanization",
-        "public_sentiment": "Nationalism, social movements, trust in institutions"
-      },
-      "economy": {
-        "trade_routes": "New maritime/land corridors, blockades, regional blocs",
-        "currency_stability": "Inflation, currency pegs, devaluations, black markets",
-        "labor_markets": "Employment by sector, unions, wage controls, skill shifts",
-        "industrial_impacts": "Factory output, resource allocation, innovation directions"
-      },
-      "political": {
-        "governance": "Regime type, constitutional reforms, bureaucracy",
-        "treaties": "Peace agreements, border settlements, trade pacts",
-        "alliances": "Military alliances, partnership networks, proxy conflicts",
-        "power_dynamics": "Hegemonic transitions, nuclear balance, regional vacuums"
-      }
-    }
-  ],
-  "long_term_consequences": {
-    "global_order": "New international system and institutions",
-    "technological_divergence": "Alternate tech development paths",
-    "cultural_legacy": "Lasting cultural and ideological impact",
-    "lessons_learned": "How history treats this alternate path"
-  },
+  "pivot": {"event": "...", "date": "...", "divergence_point": "...", "immediate_causes": "..."},
+  "timeline": [{"year": 1946, "social": {"culture": "...", "daily_life": "...", "demographics": "...", "public_sentiment": "..."}, "economy": {"trade_routes": "...", "currency_stability": "...", "labor_markets": "...", "industrial_impacts": "..."}, "political": {"governance": "...", "treaties": "...", "alliances": "...", "power_dynamics": "..."}}],
+  "long_term_consequences": {"global_order": "...", "technological_divergence": "...", "cultural_legacy": "...", "lessons_learned": "..."},
   "plausibility_score": 7.5,
-  "historical_grounding": "Which historical facts support this scenario",
-  "confidence_level": "High/Medium/Low"
+  "historical_grounding": "...",
+  "confidence_level": "High"
 }
 """
 
@@ -121,11 +88,11 @@ def get_output_schema() -> dict[str, Any]:
     return AlternateTimelineResponse.model_json_schema()
 
 
-def parse_timeline_response(raw_response: str) -> AlternateTimelineResponse:
+def parse_timeline_response(raw_response: str | dict) -> AlternateTimelineResponse:
     """Parse and validate an LLM response into the structured timeline model.
 
     Args:
-        raw_response: Raw JSON string from the LLM.
+        raw_response: Raw JSON string or dict from the LLM.
 
     Returns:
         Validated AlternateTimelineResponse.
@@ -133,5 +100,8 @@ def parse_timeline_response(raw_response: str) -> AlternateTimelineResponse:
     Raises:
         ValueError: If the response cannot be parsed.
     """
-    data = json.loads(raw_response)
+    if isinstance(raw_response, dict):
+        data = raw_response
+    else:
+        data = json.loads(raw_response)
     return AlternateTimelineResponse.model_validate(data)
