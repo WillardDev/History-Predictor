@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>History Predictor — Alternate Timelines</title>
+  <meta name="description" content="Explore plausible alternate endings to major historical events.">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <p class="eyebrow">Counterfactual history lab</p>
+      <h1>History Predictor</h1>
+      <p class="tagline">Pick a turning point. See what might have happened next.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <form id="generate-form">
+        <div class="panel-heading">
+          <h2>Build a scenario</h2>
+          <span class="hint">Takes about 5–15 seconds</span>
+        </div>
+
+        <label class="field">
+          <span>Start from a known event</span>
+          <select id="preset">
+            <option value="">Custom event…</option>
+          </select>
+        </label>
+
+        <div class="grid">
+          <label class="field">
+            <span>Event name</span>
+            <input id="name" required placeholder="e.g. Cuban Missile Crisis">
+          </label>
+
+          <label class="field">
+            <span>Start date</span>
+            <input id="start_date" required placeholder="1962-10-16">
+          </label>
+
+          <label class="field">
+            <span>End date <em>(optional)</em></span>
+            <input id="end_date" placeholder="1962-10-28">
+          </label>
+
+          <label class="field">
+            <span>Event type</span>
+            <input id="event_type" value="general" placeholder="war, revolution, pandemic…">
+          </label>
+
+          <label class="field full">
+            <span>Geographic scope</span>
+            <input id="geographic_scope" required placeholder="Caribbean / Global">
+          </label>
+
+          <label class="field full">
+            <span>Description</span>
+            <textarea id="description" required rows="3" placeholder="What happened, and why does it matter?"></textarea>
+          </label>
+
+          <label class="field full">
+            <span>Key figures <em>(comma separated)</em></span>
+            <input id="key_figures" placeholder="John F. Kennedy, Nikita Khrushchev, Fidel Castro">
+          </label>
+        </div>
+
+        <div class="grid controls">
+          <label class="field">
+            <span>Years to project</span>
+            <input id="num_years" type="number" min="1" max="6" value="6" required>
+          </label>
+
+          <fieldset class="field">
+            <legend>Focus pillars</legend>
+            <div class="checks">
+              <label><input type="checkbox" value="social" checked> Social</label>
+              <label><input type="checkbox" value="economy" checked> Economy</label>
+              <label><input type="checkbox" value="political" checked> Political</label>
+            </div>
+          </fieldset>
+        </div>
+
+        <label class="field">
+          <span>Extra context <em>(optional)</em></span>
+          <textarea id="additional_context" rows="2" placeholder="Add constraints or a specific what-if question."></textarea>
+        </label>
+
+        <div class="actions">
+          <button type="submit" id="submit-button">Generate alternate timeline</button>
+          <button type="button" id="reset-button" class="secondary">Reset</button>
+        </div>
+
+        <p id="status" class="status" hidden></p>
+      </form>
+    </section>
+
+    <section id="results" class="results" hidden aria-live="polite"></section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Counterfactual scenarios are AI-generated speculation, not historical fact.</p>
+    </div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

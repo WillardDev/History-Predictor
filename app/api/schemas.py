@@ -3,15 +3,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from app.models.timeline import (
-    AlternateTimelineResponse,
-    HistoricalEvent,
-    LongTermConsequences,
-    SocialPillar,
-    EconomyPillar,
-    PoliticalPillar,
-    TimelineEntry,
-)
+from app.models.timeline import AlternateTimelineResponse, HistoricalEvent
 
 
 # Request schemas
@@ -19,7 +11,7 @@ class GenerateRequest(BaseModel):
     """Request to generate an alternate timeline."""
 
     event: HistoricalEvent = Field(..., description="The historical event to simulate")
-    num_years: int = Field(default=20, ge=1, le=50, description="Years to project forward")
+    num_years: int = Field(default=6, ge=1, le=6, description="Years to project forward")
     focus_pillars: list[str] | None = Field(
         default=None,
         description="Pillars to emphasize: social, economy, political",
@@ -34,7 +26,7 @@ class GenerateStreamRequest(BaseModel):
     """Request to stream a timeline generation."""
 
     event: HistoricalEvent = Field(..., description="The historical event to simulate")
-    num_years: int = Field(default=20, ge=1, le=50, description="Years to project forward")
+    num_years: int = Field(default=6, ge=1, le=6, description="Years to project forward")
     focus_pillars: list[str] | None = Field(default=None)
     additional_context: str | None = Field(default=None)
 
@@ -53,6 +45,7 @@ class GenerateResponse(BaseModel):
 
     success: bool = Field(default=True)
     data: AlternateTimelineResponse
+    validation: dict | None = Field(default=None)
     processing_time_ms: float | None = Field(default=None)
 
 

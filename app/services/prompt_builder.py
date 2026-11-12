@@ -16,7 +16,8 @@ RULES:
 1. Changes must be historically plausible for the era (no sci-fi/fantasy)
 2. Each year must logically follow from the previous
 3. Consider ripple effects across social, economic, and political spheres
-4. Keep each field concise (1-3 sentences)
+4. Keep every field to a short phrase (maximum 8 words)
+5. Return exactly the requested number of timeline entries
 
 OUTPUT JSON:
 {
@@ -32,7 +33,7 @@ OUTPUT JSON:
 
 def build_user_prompt(
     event: HistoricalEvent,
-    num_years: int = 20,
+    num_years: int = 6,
     focus_pillars: list[str] | None = None,
     additional_context: str | None = None,
 ) -> str:
@@ -68,10 +69,12 @@ DESCRIPTION: {event.description}
     prompt += f"""
 INSTRUCTIONS:
 - Project the alternate timeline for {num_years} years after the pivot point.
+- Return exactly {num_years} timeline entries, one for each year.
 - Focus on these pillars in detail: {pillars_desc}.
 - Each year should have distinct, meaningful changes across all three pillars.
 - Ensure causal consistency: each year's changes should logically follow from previous years.
 - Ground all claims in historical plausibility for the era.
+- Keep each field to a short phrase (maximum 8 words).
 
 """
 
@@ -84,8 +87,94 @@ INSTRUCTIONS:
 
 
 def get_output_schema() -> dict[str, Any]:
-    """Get the JSON schema for the alternate timeline response."""
-    return AlternateTimelineResponse.model_json_schema()
+    """Compact JSON schema used for Groq structured output."""
+
+    def string(description: str) -> dict[str, str]:
+        return {"type": "string", "description": description}
+
+    def obj(properties: dict[str, dict[str, Any]]) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": properties,
+            "required": list(properties),
+            "additionalProperties": False,
+        }
+
+    social = obj(
+        {
+            "culture": string("Culture, arts, and intellectual trends"),
+            "daily_life": string("Daily life, housing, and domestic technology"),
+            "demographics": string("Population, migration, and urbanisation"),
+            "public_sentiment": string("Public opinion and social movements"),
+        }
+    )
+    economy = obj(
+        {
+            "trade_routes": string("Trade routes and regional trade blocs"),
+            "currency_stability": string("Inflation, currency pegs, black markets"),
+            "labor_markets": string("Employment, unions, and wages"),
+            "industrial_impacts": string("Factory output, resources, and innovation"),
+        }
+    )
+    political = obj(
+        {
+            "governance": string("Regime type, reforms, and bureaucracy"),
+            "treaties": string("Peace agreements and trade pacts"),
+            "alliances": string("Military alliances and proxy conflicts"),
+            "power_dynamics": string("Hegemonic transitions and regional vacuums"),
+        }
+    )
+
+    return {
+        "type": "object",
+        "properties": {
+            "pivot": obj(
+                {
+                    "event": string("The event that diverges"),
+                    "date": string("Date of the divergence"),
+                    "divergence_point": string("What changed and why"),
+                    "immediate_causes": string("Immediate causes of the change"),
+                }
+            ),
+            "timeline": {
+                "type": "array",
+                "items": obj(
+                    {
+                        "year": {"type": "integer", "description": "Year of this entry"},
+                        "social": social,
+                        "economy": economy,
+                        "political": political,
+                    }
+                ),
+            },
+            "long_term_consequences": obj(
+                {
+                    "global_order": string("New global order"),
+                    "technological_divergence": string("Alternate technology path"),
+                    "cultural_legacy": string("Lasting cultural impact"),
+                    "lessons_learned": string("How history treats this path"),
+                }
+            ),
+            "plausibility_score": {
+                "type": "number",
+                "description": "Self-assessed plausibility from 0 to 10",
+            },
+            "historical_grounding": string("Historical basis for the scenario"),
+            "confidence_level": {
+                "type": "string",
+                "enum": ["High", "Medium", "Low"],
+            },
+        },
+        "required": [
+            "pivot",
+            "timeline",
+            "long_term_consequences",
+            "plausibility_score",
+            "historical_grounding",
+            "confidence_level",
+        ],
+        "additionalProperties": False,
+    }
 
 
 def parse_timeline_response(raw_response: str | dict) -> AlternateTimelineResponse:

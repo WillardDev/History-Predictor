@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import logging
 from typing import Any, AsyncIterator
 
 from groq import AsyncGroq
@@ -22,6 +21,7 @@ class LLMClient:
         self.model = settings.groq_model
         self.temperature = settings.groq_temperature
         self.max_tokens = settings.groq_max_tokens
+        self.reasoning_effort = settings.groq_reasoning_effort
 
     async def generate(
         self,
@@ -30,6 +30,7 @@ class LLMClient:
         temperature: float | None = None,
         max_tokens: int | None = None,
         json_mode: bool = False,
+        schema: dict[str, Any] | None = None,
     ) -> str:
         """Generate a text completion from the LLM.
 
@@ -39,6 +40,7 @@ class LLMClient:
             temperature: Override temperature.
             max_tokens: Override max tokens.
             json_mode: If True, request JSON output format.
+            schema: Optional JSON schema for structured output.
 
         Returns:
             The generated text.
@@ -55,8 +57,22 @@ class LLMClient:
             "max_tokens": max_tokens if max_tokens is not None else self.max_tokens,
         }
 
-        if json_mode:
+        if schema:
+            kwargs["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "alternate_timeline",
+                    "schema": schema,
+                    "strict": True,
+                },
+            }
+        elif json_mode:
             kwargs["response_format"] = {"type": "json_object"}
+
+        # gpt-oss models spend most of their budget on hidden reasoning by
+        # default. "low" keeps that small so the JSON answer fits comfortably.
+        if self.model.startswith("openai/gpt-oss"):
+            kwargs["reasoning_effort"] = self.reasoning_effort
 
         try:
             response = await self.client.chat.completions.create(**kwargs)
@@ -88,14 +104,12 @@ class LLMClient:
             Parsed JSON response.
         """
         full_system = system_prompt or ""
-        if schema:
-            schema_str = json.dumps(schema, indent=2)
-            full_system += f"\n\nYou MUST respond with valid JSON matching this schema:\n{schema_str}"
 
         content = await self.generate(
             prompt=prompt,
             system_prompt=full_system,
             json_mode=True,
+            schema=schema,
         )
 
         # content might be a string or already parsed dict depending on provider
@@ -134,14 +148,18 @@ class LLMClient:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
+        kwargs: dict[str, Any] = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+            "stream": True,
+        }
+        if self.model.startswith("openai/gpt-oss"):
+            kwargs["reasoning_effort"] = self.reasoning_effort
+
         try:
-            stream = await self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-                stream=True,
-            )
+            stream = await self.client.chat.completions.create(**kwargs)
             async for chunk in stream:
                 if chunk.choices[0].delta.content:
                     yield chunk.choices[0].delta.content

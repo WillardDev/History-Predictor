@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
-from typing import Any
 
 
 # ---------------------------------------------------------------------------
@@ -26,6 +25,15 @@ class HistoricalEvent(BaseModel):
         default="general",
         description="Type: war, political_revolution, economic_crisis, etc.",
     )
+
+
+class Pivot(BaseModel):
+    """The point where the alternate timeline diverges from history."""
+
+    event: str = Field(..., description="The event that diverges")
+    date: str = Field(..., description="Date of the divergence")
+    divergence_point: str = Field(..., description="What changed and why")
+    immediate_causes: str = Field(..., description="Immediate causes of the change")
 
 
 class SocialPillar(BaseModel):
@@ -76,7 +84,7 @@ class LongTermConsequences(BaseModel):
 class AlternateTimelineResponse(BaseModel):
     """Complete response for an alternate timeline simulation."""
 
-    pivot: dict[str, Any] = Field(..., description="The pivot point and divergence details")
+    pivot: Pivot = Field(..., description="The pivot point and divergence details")
     timeline: list[TimelineEntry] = Field(..., description="Year-by-year alternate timeline")
     long_term_consequences: LongTermConsequences = Field(..., description="Long-term global impact")
     plausibility_score: float = Field(..., description="Self-assessed plausibility (0-10)")

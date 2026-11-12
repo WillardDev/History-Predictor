@@ -17,24 +17,15 @@ class Settings(BaseSettings):
 
     # Groq LLM configuration
     groq_api_key: str = Field(default="")
-    groq_model: str = Field(default="qwen/qwen3.8-27b")
+    groq_model: str = Field(default="openai/gpt-oss-120b")
     groq_temperature: float = Field(default=0.7)
-    groq_max_tokens: int = Field(default=8192)
+    groq_max_tokens: int = Field(default=4000)
+    groq_reasoning_effort: str = Field(default="low")
 
     # App settings
     app_name: str = Field(default="History Predictor")
     app_version: str = Field(default="0.1.0")
     debug: bool = Field(default=True)
-
-    # Database
-    database_url: str = Field(default="sqlite:///./history_predictor.db")
-
-    # Vector DB (Phase 2)
-    chroma_host: str = Field(default="localhost")
-    chroma_port: int = Field(default=8000)
-
-    # Cache
-    redis_url: str = Field(default="redis://localhost:6379/0")
 
 
 settings = Settings()
